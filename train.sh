@@ -5,7 +5,9 @@ cd src/r1-v
 export DEBUG_MODE="true" # Enable Debug if you want to see the rollout of model during RL
 export LOG_PATH="./debug_log_2b.txt"
 
-MODEL_NAME=Qwen/Qwen2.5-VL-7B-Instruct
+# MODEL_NAME=Qwen/Qwen2.5-VL-7B-Instruct
+MODEL_NAME=Qwen/Qwen2-VL-7B-Instruct
+
 RUN_NAME=${MODEL_NAME}-GRPO-$(date +%Y%m%d%H%M%S)
 OUTPUT_DIR=checkpoints/${RUN_NAME}
 S3_OUTPUT_DIR=s3://snappr-ai-models/automated-qa/grpo-train/${RUN_NAME}
@@ -36,4 +38,4 @@ torchrun --nproc_per_node="8" \
     --run_name $RUN_NAME \
     --save_steps 50 \
     --save_only_model false \
-    --num_generations 8   # number of outputs G in grpo, reduce it would lead to faster training and smaller memory cost but higher variance  
+    --num_generations 2   # number of outputs G in grpo, reduce it would lead to faster training and smaller memory cost but higher variance  
