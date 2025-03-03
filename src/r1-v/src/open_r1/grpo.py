@@ -119,7 +119,9 @@ def accuracy_reward(completions, review_status_binary, **kwargs):
         try:
             content_match = re.search(r"<answer>(.*?)</answer>", content)
             inferred_review_status_binary = (
-                content_match.group(1).strip() if content_match else content.strip()
+                content_match.group(1).strip().lower()
+                if content_match
+                else content.strip()
             )
 
             if inferred_review_status_binary == ground_truth:
@@ -138,7 +140,7 @@ def accuracy_reward(completions, review_status_binary, **kwargs):
 
 def format_reward(completions, **kwargs):
     """Reward function that checks if the completion has a specific format and rewards based on word count."""
-    pattern = r"^<think>([^<]*(?:<(?!/?think>)[^<]*)*)<\/think>\n<answer>\s*(fail|pass)\s*<\/answer>$"
+    pattern = r"<think>.*?<\/think>\s*<answer>.*?<\/answer>"
 
     completion_contents = [completion[0]["content"] for completion in completions]
     rewards = []
