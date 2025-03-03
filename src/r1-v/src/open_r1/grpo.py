@@ -243,7 +243,6 @@ def make_conversation(example):
                 ],
             },
         ],
-        "image": example["media"],
     }
 
 
