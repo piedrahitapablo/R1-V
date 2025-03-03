@@ -243,6 +243,8 @@ def make_conversation(example):
                 ],
             },
         ],
+        # this field is needed because the trainer expects a "image" column
+        "image": example["media"],
     }
 
 
