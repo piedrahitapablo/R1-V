@@ -138,7 +138,7 @@ def accuracy_reward(completions, review_status_binary, **kwargs):
 
 def format_reward(completions, **kwargs):
     """Reward function that checks if the completion has a specific format and rewards based on word count."""
-    pattern = r"^<think>([^<]*(?:<(?!/?think>)[^<]*)*)<\/think>\n<answer>(fail|pass)<\/answer>$"
+    pattern = r"^<think>([^<]*(?:<(?!/?think>)[^<]*)*)<\/think>\n<answer>\s*(fail|pass)\s*<\/answer>$"
 
     completion_contents = [completion[0]["content"] for completion in completions]
     rewards = []
