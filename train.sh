@@ -10,7 +10,7 @@ MODEL_NAME=Qwen/Qwen2-VL-7B-Instruct
 
 RUN_NAME=${MODEL_NAME}-GRPO-$(date +%Y%m%d%H%M%S)
 OUTPUT_DIR=checkpoints/${RUN_NAME}
-S3_OUTPUT_DIR=s3://snappr-ai-models/automated-qa/grpo-train/${RUN_NAME}
+S3_OUTPUT_DIR=s3://snappr-ai-models/juan.p/automated-qa-grpo/${RUN_NAME}
 DATASET_NAME=snappr/automated-qa-2025-q1-v1
 
 torchrun --nproc_per_node="8" \
