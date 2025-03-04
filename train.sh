@@ -28,6 +28,7 @@ torchrun --nproc_per_node="8" \
     --max_completion_length 1024 \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 2 \
+    --lr_scheduler_type "constant_with_warmup" \
     --logging_steps 1 \
     --bf16 \
     --report_to wandb \
@@ -38,4 +39,4 @@ torchrun --nproc_per_node="8" \
     --run_name $RUN_NAME \
     --save_steps 50 \
     --save_only_model false \
-    --num_generations 2   # number of outputs G in grpo, reduce it would lead to faster training and smaller memory cost but higher variance  
+    --num_generations 4   # number of outputs G in grpo, reduce it would lead to faster training and smaller memory cost but higher variance  

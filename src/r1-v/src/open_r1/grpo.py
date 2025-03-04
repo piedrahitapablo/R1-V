@@ -138,19 +138,28 @@ def accuracy_reward(completions, review_status_binary, **kwargs):
     return rewards
 
 
-def format_reward(completions, **kwargs):
+def format_reward(completions, review_status_binary, **kwargs):
     """Reward function that checks if the completion has a specific format and rewards based on word count."""
-    pattern = r"<think>.*?<\/think>\s*<answer>.*?<\/answer>"
+    pattern = r"<think>.*?<\/think>\s*<answer>(.*?)<\/answer>"
 
     completion_contents = [completion[0]["content"] for completion in completions]
     rewards = []
     current_time = datetime.now().strftime("%d-%H-%M-%S-%f")
     for content in completion_contents:
         match = re.fullmatch(pattern, content, re.DOTALL | re.MULTILINE)
-        reward = 1.0 if match else 0.0
-        rewards.append(reward)
+        if match:
+            inferred_review_status_binary = (
+                match.group(1).strip().lower() if match else content.strip()
+            )
+            rewards.append(
+                1.0 if inferred_review_status_binary == review_status_binary else 0.0
+            )
+        else:
+            rewards.append(0.0)
 
-        print(f"------------- {current_time} Accuracy reward: {reward} -------------")
+        print(
+            f"------------- {current_time} Accuracy reward: {rewards[-1]} -------------"
+        )
         print(f"Content: {content}")
 
     return rewards
