@@ -96,14 +96,14 @@ def format_reward(completions, review_status_binary, **kwargs):
     completion_contents = [completion[0]["content"] for completion in completions]
     rewards = []
     current_time = datetime.now().strftime("%d-%H-%M-%S-%f")
-    for content in completion_contents:
+    for content, ground_truth in zip(completion_contents, review_status_binary):
         match = re.fullmatch(pattern, content, re.DOTALL | re.MULTILINE)
         if match:
             inferred_review_status_binary = (
                 match.group(1).strip().lower() if match else content.strip()
             )
             rewards.append(
-                1.0 if inferred_review_status_binary == review_status_binary else 0.0
+                1.0 if inferred_review_status_binary == ground_truth else 0.0
             )
         else:
             rewards.append(0.0)
