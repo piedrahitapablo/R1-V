@@ -37,4 +37,4 @@ torchrun --nproc_per_node="8" \
     --run_name $RUN_NAME \
     --save_steps 50 \
     --save_only_model false \
-    --num_generations 4   # number of outputs G in grpo, reduce it would lead to faster training and smaller memory cost but higher variance  
+    --num_generations 2   # number of outputs G in grpo, reduce it would lead to faster training and smaller memory cost but higher variance  
