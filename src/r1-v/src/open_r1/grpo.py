@@ -28,6 +28,7 @@ from trl import (
     TrlParser,
     get_peft_config,
 )
+from transformers import get_constant_schedule_with_warmup
 
 
 @dataclass
@@ -59,58 +60,71 @@ class GRPOScriptArguments(ScriptArguments):
 def accuracy_reward(completions, review_status_binary, **kwargs):
     print("-" * 100)
     print("Expected:", review_status_binary)
-    print("Completions: ", completions)
+    print("Completions:", completions)
 
-    contents = [completion[0]["content"] for completion in completions]
-    rewards = []
-    current_time = datetime.now().strftime("%d-%H-%M-%S-%f")
-    for content, ground_truth in zip(contents, review_status_binary):
-        reward = 0.0
-
+    correctness = []
+    for content, ground_truth in zip(completions, review_status_binary):
         try:
-            content_match = re.search(r"<answer>(.*?)</answer>", content)
-            inferred_review_status_binary = (
-                content_match.group(1).strip().lower()
-                if content_match
-                else content.strip()
+            content = content[0]["content"].strip()
+            predicted_status = (
+                content.split("<answer>")[1].split("</answer>")[0].strip().lower()
             )
-
-            if inferred_review_status_binary == ground_truth:
-                reward = 1.0
+            correctness.append(predicted_status == ground_truth.lower())
         except Exception:
-            pass
+            correctness.append(False)
 
-        rewards.append(reward)
+    num_correct = sum(1.0 for c in correctness if c)
+    batch_size = len(correctness) if correctness else 1
+    correct_ratio = num_correct / batch_size
 
-        print(f"------------- {current_time} Accuracy reward: {reward} -------------")
+    target_batch_average = correct_ratio**4
+    correct_scaling = (
+        (target_batch_average * batch_size / num_correct) if num_correct > 0 else 0.0
+    )
+
+    rewards = []
+    for is_correct, content, ground_truth in zip(
+        correctness, completions, review_status_binary
+    ):
+        content = content[0]["content"].strip()
+        if is_correct:
+            rewards.append(correct_scaling)
+        else:
+            rewards.append(0.0)
+
+        now = datetime.now().strftime("%d-%H-%M-%S-%f")
+        print(f"------------- {now} Accuracy reward: {rewards[-1]} -------------")
         print(f"Content: {content}")
         print(f"Expected review status: {ground_truth}")
 
     return rewards
 
 
-def format_reward(completions, review_status_binary, **kwargs):
-    """Reward function that checks if the completion has a specific format and rewards based on word count."""
-    pattern = r"<think>.*?<\/think>\s*<answer>(.*?)<\/answer>"
+format_re = re.compile(
+    r"<think>.*?<\/think>\s*<answer>(.*?)<\/answer>", flags=re.DOTALL | re.MULTILINE
+)
 
-    completion_contents = [completion[0]["content"] for completion in completions]
+
+def format_reward(completions, review_status_binary, **kwargs):
     rewards = []
-    current_time = datetime.now().strftime("%d-%H-%M-%S-%f")
-    for content, ground_truth in zip(completion_contents, review_status_binary):
-        match = re.fullmatch(pattern, content, re.DOTALL | re.MULTILINE)
-        if match:
-            inferred_review_status_binary = (
-                match.group(1).strip().lower() if match else content.strip()
-            )
-            rewards.append(
-                1.0 if inferred_review_status_binary == ground_truth else 0.0
-            )
-        else:
+    for content, ground_truth in zip(completions, review_status_binary):
+        content = content[0]["content"].strip()
+        try:
+            if format_re.fullmatch(content):
+                predicted_status = (
+                    content.split("<answer>")[1].split("</answer>")[0].strip().lower()
+                )
+                if predicted_status == ground_truth.lower():
+                    rewards.append(0.2)
+                else:
+                    rewards.append(0.0)
+            else:
+                rewards.append(0.0)
+        except Exception:
             rewards.append(0.0)
 
-        print(
-            f"------------- {current_time} Format reward: {rewards[-1]} -------------"
-        )
+        now = datetime.now().strftime("%d-%H-%M-%S-%f")
+        print(f"------------- {now} Format reward: {rewards[-1]} -------------")
         print(f"Content: {content}")
 
     return rewards
@@ -253,7 +267,17 @@ def main(script_args, training_args, model_args):
         trainer.push_to_hub(dataset_name=script_args.dataset_name)
 
 
+class CustomGRPOConfig(GRPOConfig):
+    def get_scheduler(self, optimizer, num_training_steps: int):
+        if self.lr_scheduler_type == "constant_with_warmup":
+            return get_constant_schedule_with_warmup(
+                optimizer, num_warmup_steps=self.warmup_steps
+            )
+        else:
+            return super().get_scheduler(optimizer, num_training_steps)
+
+
 if __name__ == "__main__":
-    parser = TrlParser((GRPOScriptArguments, GRPOConfig, ModelConfig))
+    parser = TrlParser((GRPOScriptArguments, CustomGRPOConfig, ModelConfig))
     script_args, training_args, model_args = parser.parse_args_and_config()
     main(script_args, training_args, model_args)

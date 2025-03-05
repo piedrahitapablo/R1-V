@@ -27,6 +27,7 @@ torchrun --nproc_per_node="8" \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 2 \
     --lr_scheduler_type "constant_with_warmup" \
+    --warmup_steps 20 \
     --logging_steps 1 \
     --bf16 \
     --report_to wandb \
