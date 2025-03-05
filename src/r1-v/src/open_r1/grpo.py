@@ -58,6 +58,7 @@ class GRPOScriptArguments(ScriptArguments):
 
 def accuracy_reward(completions, review_status_binary, **kwargs):
     print("-" * 100)
+    print("Expected:", review_status_binary)
     print("Completions: ", completions)
 
     contents = [completion[0]["content"] for completion in completions]
@@ -108,7 +109,7 @@ def format_reward(completions, review_status_binary, **kwargs):
             rewards.append(0.0)
 
         print(
-            f"------------- {current_time} Accuracy reward: {rewards[-1]} -------------"
+            f"------------- {current_time} Format reward: {rewards[-1]} -------------"
         )
         print(f"Content: {content}")
 
