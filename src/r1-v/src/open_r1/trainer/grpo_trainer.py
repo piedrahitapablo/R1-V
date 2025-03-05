@@ -358,7 +358,10 @@ class Qwen2VLGRPOTrainer(Trainer):
 
         prompts = [x["prompt"] for x in inputs]
         prompts_text = [maybe_apply_chat_template(example, self.processing_class)["prompt"] for example in inputs]
-        images = [x["image"] for x in inputs]
+
+        # previosuly this was using "image" but to make mapping faster I changed
+        # it to "media" which is the key used in the dataset
+        images = [x["media"] for x in inputs]
         prompt_inputs = self.processing_class(
             text=prompts_text,
             images=images,
