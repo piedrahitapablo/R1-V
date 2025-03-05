@@ -8,9 +8,8 @@ export LOG_PATH="./debug_log_2b.txt"
 # MODEL_NAME=Qwen/Qwen2.5-VL-7B-Instruct
 MODEL_NAME=Qwen/Qwen2-VL-7B-Instruct
 
-RUN_NAME=${MODEL_NAME}-GRPO-$(date +%Y%m%d%H%M%S)
-OUTPUT_DIR=checkpoints/${RUN_NAME}
-S3_OUTPUT_DIR=s3://snappr-ai-models/juan.p/automated-qa-grpo/${RUN_NAME}
+RUN_NAME=${MODEL_NAME}-GRPO-v1
+OUTPUT_DIR=/remote-r2/snappr-ai-models/juan.p/automated-qa/grpo/checkpoints/${RUN_NAME}
 DATASET_NAME=snappr/automated-qa-2025-q1-v1
 
 torchrun --nproc_per_node="8" \
@@ -20,7 +19,6 @@ torchrun --nproc_per_node="8" \
     --master_port="12345" \
     src/open_r1/grpo.py \
     --output_dir $OUTPUT_DIR \
-    --s3_output_dir $S3_OUTPUT_DIR \
     --model_name_or_path $MODEL_NAME \
     --dataset_name $DATASET_NAME \
     --deepspeed local_scripts/zero3_offload.json \

@@ -12,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import re
-import subprocess
 
 from datetime import datetime
 from dataclasses import dataclass, field
 from typing import Optional
 
 from datasets import load_dataset
-from transformers import TrainerCallback
 
 from open_r1.trainer import Qwen2VLGRPOTrainer, Qwen2VLGRPOVLLMTrainerModified
 from trl import (
@@ -31,49 +28,6 @@ from trl import (
     TrlParser,
     get_peft_config,
 )
-
-
-class SyncS3CheckpointCallback(TrainerCallback):
-    def __init__(self, s3_output_dir: Optional[str] = None):
-        self.s3_output_dir = s3_output_dir
-
-    def on_save(self, args, state, control, **kwargs):
-        # `args`:       TrainingArguments (hyperparameters, output_dir, etc.)
-        # `state`:      TrainerState (current epoch, global_step, etc.)
-        # `control`:    TrainerControl (can be used to instruct the trainer to skip or interrupt actions)
-        # `**kwargs`:   Additional properties like model, optimizer, lr_scheduler, etc.
-
-        print(f">>Checkpoint is being saved. Current step: {state.global_step}")
-        print("state", state)
-        checkpoint_folder = f"checkpoint-{state.global_step}"
-
-        if self.s3_output_dir is not None and args.output_dir is not None:
-            print(os.system("ls -l"))
-            print(">>>Syncing to S3 (not lora)")
-            process = subprocess.Popen(
-                f"aws s3 sync {os.path.join(args.output_dir, checkpoint_folder)} {os.path.join(self.s3_output_dir, checkpoint_folder)} && rm -rf {os.path.join(args.output_dir, checkpoint_folder)}",
-                shell=True,
-                start_new_session=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-
-            # Print output in real-time
-            # while True:
-            #     output = process.stdout.readline()
-            #     error = process.stderr.readline()
-
-            #     if output:
-            #         print(f"Sync output: {output.decode().strip()}")
-            #     if error:
-            #         print(f"Sync error: {error.decode().strip()}")
-
-            #     # Break if process has finished
-            #     if process.poll() is not None:
-            #         break
-
-            # remove the `args.output_dir` directory content
-            # os.system(f"rm -rf {args.output_dir}/*")
 
 
 @dataclass
@@ -99,10 +53,6 @@ class GRPOScriptArguments(ScriptArguments):
     min_pixels: Optional[int] = field(
         default=3136,
         metadata={"help": "Minimum number of pixels for the image"},
-    )
-    s3_output_dir: Optional[str] = field(
-        default=None,
-        metadata={"help": "S3 output directory"},
     )
 
 
@@ -287,7 +237,6 @@ def main(script_args, training_args, model_args):
         eval_dataset=dataset[script_args.dataset_test_split]
         if training_args.eval_strategy != "no"
         else None,
-        callbacks=[SyncS3CheckpointCallback(s3_output_dir=script_args.s3_output_dir)],
         peft_config=get_peft_config(model_args),
         attn_implementation=model_args.attn_implementation,
         max_pixels=script_args.max_pixels,
