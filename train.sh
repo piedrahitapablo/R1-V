@@ -6,7 +6,8 @@ export DEBUG_MODE="true" # Enable Debug if you want to see the rollout of model 
 export LOG_PATH="./debug_log_2b.txt"
 
 # MODEL_NAME=Qwen/Qwen2.5-VL-7B-Instruct
-MODEL_NAME=Qwen/Qwen2-VL-7B-Instruct
+# MODEL_NAME=Qwen/Qwen2-VL-7B-Instruct
+MODEL_NAME=Qwen/Qwen2-VL-2B-Instruct
 
 RUN_NAME=${MODEL_NAME}-GRPO-v1
 OUTPUT_DIR=/remote-r2/snappr-ai-models/juan.p/automated-qa/grpo/checkpoints/${RUN_NAME}
