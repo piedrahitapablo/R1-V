@@ -10,7 +10,7 @@ MODEL_NAME=Qwen/Qwen2-VL-7B-Instruct
 
 RUN_NAME=${MODEL_NAME}-GRPO-v1
 OUTPUT_DIR=/remote-r2/snappr-ai-models/juan.p/automated-qa/grpo/checkpoints/${RUN_NAME}
-DATASET_NAME=snappr/automated-qa-2025-q1-v1
+DATASET_NAME=snappr/automated-qa-2025-q1-grpo-v1
 
 torchrun --nproc_per_node="8" \
     --nnodes="1" \

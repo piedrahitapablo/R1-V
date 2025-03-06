@@ -361,7 +361,7 @@ class Qwen2VLGRPOTrainer(Trainer):
 
         # previosuly this was using "image" but to make mapping faster I changed
         # it to "media" which is the key used in the dataset
-        images = [x["media"] for x in inputs]
+        images = [x["media_256"] for x in inputs]
         prompt_inputs = self.processing_class(
             text=prompts_text,
             images=images,
